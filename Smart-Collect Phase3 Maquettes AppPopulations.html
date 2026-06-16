@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Smart-Collect — Maquettes App Populations (Phase 3)</title>
+<style>
+  :root{
+    --green:#0F6E56;
+    --green-light:#1D9E75;
+    --green-pale:#E8F5E9;
+    --orange:#E65100;
+    --red:#A32D2D;
+    --blue:#1565C0;
+    --ink:#2A2A2A;
+    --grey:#707070;
+    --white:#FFFFFF;
+    --r-sm:4px;
+    --r-md:8px;
+    --r-lg:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:#F4F6F5;
+    color:var(--ink);
+    padding:40px;
+  }
+  h1{
+    font-size:28px;
+    font-weight:800;
+    color:var(--green);
+    margin:0 0 4px;
+  }
+  .subtitle{
+    color:var(--grey);
+    font-size:14px;
+    margin-bottom:32px;
+  }
+  .board{
+    display:flex;
+    flex-wrap:wrap;
+    gap:32px;
+  }
+  .screen-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    page-break-after:always;
+    break-after:page;
+    width:100%;
+    padding-top:20px;
+  }
+  @media print{
+    body{ padding:20px; }
+    h1, .subtitle{ display:none; }
+    .screen-wrap{ height:100vh; justify-content:center; }
+  }
+  .screen-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    background:var(--white);
+    padding:6px 14px;
+    border-radius:20px;
+    border:1px solid #ddd;
+  }
+  .screen-label span{
+    color:var(--green-light);
+    font-weight:800;
+    margin-right:6px;
+  }
+  .frame{
+    width:375px;
+    height:812px;
+    background:var(--white);
+    border-radius:36px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.12);
+    overflow:hidden;
+    position:relative;
+    border:8px solid #1c1c1c;
+  }
+  .screen{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:var(--white);
+  }
+  .statusbar{
+    height:28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    flex-shrink:0;
+  }
+
+  /* ---- generic components ---- */
+  .topbar{
+    padding:12px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-shrink:0;
+  }
+  .topbar.green{ background:var(--green); color:var(--white); }
+  .topbar h2{ margin:0; font-size:18px; font-weight:800; }
+  .topbar .icon-btn{
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.18);
+    font-size:16px;
+  }
+
+  .content{
+    flex:1;
+    overflow-y:auto;
+    padding:20px;
+  }
+  .content.nopad{padding:0;}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;
+    height:48px;border-radius:var(--r-md);
+    font-weight:700;font-size:15px;
+    border:none;cursor:pointer;
+  }
+  .btn-primary{ background:var(--green); color:var(--white); }
+  .btn-secondary{ background:var(--green-pale); color:var(--green); }
+  .btn-outline{ background:transparent; color:var(--green); border:1.5px solid var(--green); }
+  .btn-ghost{ background:transparent; color:var(--grey); }
+
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;font-size:12px;font-weight:600;color:var(--grey);margin-bottom:6px;
+  }
+  .field input, .field textarea{
+    width:100%;height:48px;border-radius:var(--r-md);
+    border:1.5px solid #E0E0E0;padding:0 14px;
+    font-size:14px;font-family:inherit;color:var(--ink);
+    background:var(--white);
+  }
+  .field textarea{height:90px;padding:10px 14px;resize:none;}
+  .field input:focus, .field textarea:focus{
+    outline:none;border-color:var(--green-light);
+  }
+
+  .card{
+    background:var(--white);
+    border:1px solid #ECECEC;
+    border-radius:var(--r-md);
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .badge{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:20px;
+  }
+  .badge-normal{ background:var(--green-pale); color:var(--green); }
+  .badge-almost{ background:#FFF1E0; color:var(--orange); }
+  .badge-full{ background:#FBE5E5; color:var(--red); }
+  .badge-fire{ background:var(--red); color:var(--white); }
+  .badge-offline{ background:#EFEFEF; color:var(--grey); }
+
+  .bottomnav{
+    height:64px;
+    display:flex;
+    border-top:1px solid #EEE;
+    flex-shrink:0;
+    background:var(--white);
+  }
+  .navitem{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:4px;font-size:11px;font-weight:600;color:var(--grey);
+  }
+  .navitem.active{ color:var(--green); }
+  .navicon{ font-size:18px; }
+
+  .avatar{
+    width:40px;height:40px;border-radius:50%;
+    background:var(--green-pale);color:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;flex-shrink:0;
+  }
+
+  .map-mock{
+    width:100%;height:260px;border-radius:var(--r-md);
+    background:
+      linear-gradient(135deg, #DCEFE6 0%, #CFEAE0 100%);
+    position:relative;overflow:hidden;
+    border:1px solid #D6E9E1;
+  }
+  .map-mock::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 2px, transparent 2px 40px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 2px, transparent 2px 40px);
+  }
+  .pin{
+    position:absolute;width:28px;height:28px;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:white;font-weight:800;
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .pin span{ transform:rotate(45deg); }
+  .pin-normal{ background:var(--green-light); }
+  .pin-almost{ background:var(--orange); }
+  .pin-full{ background:var(--red); }
+  .pin-fire{ background:#7A0000; }
+
+  .progressbar{
+    height:8px;border-radius:8px;background:#EEE;overflow:hidden;
+  }
+  .progressbar > div{ height:100%; border-radius:8px; }
+
+  .steps{
+    display:flex;gap:6px;margin-bottom:18px;
+  }
+  .steps div{
+    flex:1;height:4px;border-radius:4px;background:#E8E8E8;
+  }
+  .steps div.done, .steps div.active{ background:var(--green); }
+
+  .pill-tab{
+    display:flex;background:var(--green-pale);border-radius:var(--r-md);
+    padding:4px;margin-bottom:16px;
+  }
+  .pill-tab span{
+    flex:1;text-align:center;padding:8px;border-radius:6px;
+    font-size:13px;font-weight:700;color:var(--green);
+  }
+  .pill-tab span.active{ background:var(--green); color:var(--white); }
+
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;padding:60px 30px;color:var(--grey);
+  }
+  .empty-illustration{
+    width:140px;height:140px;border-radius:50%;
+    background:var(--green-pale);
+    display:flex;align-items:center;justify-content:center;
+    font-size:56px;margin-bottom:20px;
+  }
+  .empty-state h3{ color:var(--ink); margin:0 0 6px; font-size:16px; }
+  .empty-state p{ font-size:13px; margin:0 0 20px; line-height:1.5; }
+
+  .toggle{
+    width:46px;height:26px;border-radius:20px;background:#E0E0E0;
+    position:relative;flex-shrink:0;
+  }
+  .toggle.on{ background:var(--green-light); }
+  .toggle::after{
+    content:"";position:absolute;top:3px;left:3px;
+    width:20px;height:20px;border-radius:50%;background:white;
+    transition:.2s;
+  }
+  .toggle.on::after{ left:23px; }
+
+  .timeline{
+    position:relative;padding-left:28px;
+  }
+  .timeline-item{
+    position:relative;padding-bottom:24px;
+  }
+  .timeline-item::before{
+    content:"";position:absolute;left:-22px;top:2px;
+    width:14px;height:14px;border-radius:50%;
+    background:var(--green-light);border:3px solid var(--green-pale);
+  }
+  .timeline-item::after{
+    content:"";position:absolute;left:-16px;top:18px;
+    width:2px;height:100%;background:#E8E8E8;
+  }
+  .timeline-item:last-child::after{ display:none; }
+  .timeline-item.pending::before{ background:#E0E0E0; }
+
+  .photo-placeholder{
+    width:100%;height:140px;border-radius:var(--r-md);
+    background:repeating-linear-gradient(45deg, #EFF6F3 0 10px, #E6F1EC 10px 20px);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--green-light);font-size:32px;
+    border:1.5px dashed #BFE1D2;
+  }
+
+  .section-title{
+    font-size:13px;font-weight:800;color:var(--grey);
+    text-transform:uppercase;letter-spacing:0.5px;
+    margin:20px 0 10px;
+  }
+  .section-title:first-child{ margin-top:0; }
+
+  .toast{
+    position:absolute;bottom:84px;left:20px;right:20px;
+    background:var(--ink);color:white;border-radius:var(--r-md);
+    padding:12px 16px;font-size:13px;font-weight:600;
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+<h1>🎨 Smart-Collect — Maquettes haute fidélité</h1>
+<div class="subtitle">PHASE 3 · App Populations (Maeva) · 11 écrans · 375×812 · Identité Smart-Collect (Vert #0F6E56 / #1D9E75, Inter)</div>
+
+<div class="board">
+
+  <!-- 1. ACCUEIL NON CONNECTÉ -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>01</span>Accueil non connecté</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="content" style="display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg, var(--green) 0%, var(--green-light) 45%, var(--white) 45%);">
+        <div style="text-align:center;color:white;padding-top:30px;">
+          <div style="font-size:48px;">♻️</div>
+          <div style="font-size:24px;font-weight:800;margin-top:8px;">Smart-Collect</div>
+          <div style="font-size:13px;opacity:0.9;margin-top:4px;">Douala plus propre, ensemble</div>
+        </div>
+        <div style="background:white;border-radius:var(--r-lg);padding:24px 20px;margin-top:140px;box-shadow:0 -4px 20px rgba(0,0,0,0.05);">
+          <div style="font-size:18px;font-weight:800;margin-bottom:6px;">Bienvenue 👋</div>
+          <div style="font-size:13px;color:var(--grey);margin-bottom:24px;line-height:1.5;">Signalez les bacs pleins, suivez la collecte près de chez vous et contribuez à une ville plus propre.</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <button class="btn btn-primary">Créer un compte</button>
+            <button class="btn btn-outline">J'ai déjà un compte</button>
+          </div>
+          <div style="text-align:center;font-size:11px;color:var(--grey);margin-top:16px;">En continuant, vous acceptez les conditions d'utilisation</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 2. INSCRIPTION -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>02</span>Inscription</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">←</div><h2 style="color:var(--ink);">Créer un compte</h2><div style="width:20px;"></div></div>
+      <div class="content">
+        <div style="font-size:13px;color:var(--grey);margin-bottom:20px;line-height:1.5;">Rejoignez Smart-Collect pour signaler les bacs et suivre la collecte dans votre quartier.</div>
+        <div class="field"><label>Nom complet</label><input placeholder="Ex. Maeva Nguemo"></div>
+        <div class="field"><label>Numéro de téléphone</label><input placeholder="+237 6XX XX XX XX"></div>
+        <div class="field"><label>Quartier</label><input placeholder="Ex. Akwa, Bonanjo, Bonapriso..."></div>
+        <div class="field"><label>Mot de passe</label><input type="password" placeholder="8 caractères minimum"></div>
+        <button class="btn btn-primary" style="margin-top:8px;">Créer mon compte</button>
+        <div style="text-align:center;font-size:13px;color:var(--grey);margin-top:16px;">
+          Déjà inscrit ? <span style="color:var(--green);font-weight:700;">Se connecter</span>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 3. CONNEXION -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>03</span>Connexion</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="content" style="display:flex;flex-direction:column;justify-content:center;">
+        <div style="text-align:center;margin-bottom:40px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;">♻️</div>
+          <div style="font-size:20px;font-weight:800;">Bon retour !</div>
+          <div style="font-size:13px;color:var(--grey);margin-top:4px;">Connectez-vous pour continuer</div>
+        </div>
+        <div class="field"><label>Numéro de téléphone</label><input placeholder="+237 6XX XX XX XX"></div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" placeholder="••••••••">
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--green);font-weight:700;margin-bottom:20px;">Mot de passe oublié ?</div>
+        <button class="btn btn-primary">Se connecter</button>
+        <div style="text-align:center;font-size:13px;color:var(--grey);margin-top:16px;">
+          Pas encore de compte ? <span style="color:var(--green);font-weight:700;">S'inscrire</span>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 4. HOME CONNECTÉ -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>04</span>Accueil connecté</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green">
+        <div>
+          <div style="font-size:12px;opacity:0.85;">Bonjour 👋</div>
+          <div style="font-size:18px;font-weight:800;">Maeva</div>
+        </div>
+        <div class="icon-btn">🔔</div>
+      </div>
+      <div class="content">
+        <div class="card" style="background:var(--green-pale);border:none;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:12px;color:var(--green);font-weight:700;">Votre impact ce mois</div>
+            <div style="font-size:26px;font-weight:800;color:var(--green);margin-top:2px;">7 signalements</div>
+          </div>
+          <div style="font-size:36px;">🌱</div>
+        </div>
+
+        <div class="section-title">Statistiques du quartier</div>
+        <div style="display:flex;gap:10px;">
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--green);">128</div>
+            <div style="font-size:11px;color:var(--grey);">Bacs surveillés</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--orange);">9</div>
+            <div style="font-size:11px;color:var(--grey);">Bacs presque pleins</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--red);">2</div>
+            <div style="font-size:11px;color:var(--grey);">Alertes actives</div>
+          </div>
+        </div>
+
+        <div class="section-title">Actions rapides</div>
+        <button class="btn btn-primary" style="margin-bottom:10px;">📍 Signaler un bac</button>
+        <button class="btn btn-secondary">🗺️ Voir la carte</button>
+
+        <div class="section-title">Signalements récents</div>
+        <div class="card" style="display:flex;gap:12px;align-items:center;">
+          <div style="width:44px;height:44px;border-radius:8px;background:#EFEFEF;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;">🗑️</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:14px;">Bac plein — Rue Joss</div>
+            <div style="font-size:12px;color:var(--grey);">Il y a 2 heures</div>
+          </div>
+          <span class="badge badge-almost">En cours</span>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem active"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 5. CARTE DES BACS -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>05</span>Carte des bacs</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green"><h2>Carte des bacs</h2><div class="icon-btn">🎯</div></div>
+      <div class="content nopad" style="position:relative;">
+        <div class="map-mock" style="height:100%;border-radius:0;">
+          <div class="pin pin-normal" style="top:30%;left:20%;"><span>♻️</span></div>
+          <div class="pin pin-normal" style="top:55%;left:65%;"><span>♻️</span></div>
+          <div class="pin pin-almost" style="top:42%;left:48%;"><span>♻️</span></div>
+          <div class="pin pin-full" style="top:68%;left:30%;"><span>♻️</span></div>
+          <div class="pin pin-fire" style="top:22%;left:70%;"><span>🔥</span></div>
+          <div class="pin pin-normal" style="top:78%;left:75%;"><span>♻️</span></div>
+        </div>
+        <!-- filter bar -->
+        <div style="position:absolute;top:14px;left:14px;right:14px;background:white;border-radius:var(--r-md);padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,0.1);font-size:13px;display:flex;align-items:center;gap:8px;color:var(--grey);">
+          🔍 Rechercher un quartier...
+        </div>
+        <!-- legend / bottom card -->
+        <div style="position:absolute;bottom:14px;left:14px;right:14px;background:white;border-radius:var(--r-lg);padding:16px;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+          <div style="display:flex;gap:14px;margin-bottom:12px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--green-light);"></div>Normal</div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange);"></div>Presque plein</div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--red);"></div>Plein</div>
+            <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:#7A0000;"></div>Feu</div>
+          </div>
+          <div style="font-weight:800;font-size:14px;">Bac #042 — Rue Joss</div>
+          <div style="font-size:12px;color:var(--grey);margin:4px 0 10px;">Statut : presque plein (82%)</div>
+          <button class="btn btn-primary" style="height:40px;font-size:13px;">Signaler ce bac</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem active"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 6. NOUVEAU SIGNALEMENT — ETAPE 1 -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>06a</span>Signalement — Étape 1/3 : Photo</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">✕</div><h2 style="color:var(--ink);">Nouveau signalement</h2><div style="width:20px;"></div></div>
+      <div class="content">
+        <div class="steps"><div class="active"></div><div></div><div></div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">ÉTAPE 1 SUR 3</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px;">Prenez une photo</div>
+        <div style="font-size:13px;color:var(--grey);margin-bottom:20px;line-height:1.5;">Photographiez le bac ou le dépôt sauvage pour aider les agents Hysacam à intervenir rapidement.</div>
+        <div class="photo-placeholder" style="height:220px;font-size:40px;flex-direction:column;gap:8px;">
+          📷
+          <div style="font-size:13px;font-weight:700;color:var(--green-light);">Ajouter une photo</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn btn-secondary" style="flex:1;">📁 Galerie</button>
+          <button class="btn btn-secondary" style="flex:1;">📷 Caméra</button>
+        </div>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid #EEE;">
+        <button class="btn btn-primary">Continuer</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 6b. NOUVEAU SIGNALEMENT — ETAPE 2 -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>06b</span>Signalement — Étape 2/3 : Localisation</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">←</div><h2 style="color:var(--ink);">Nouveau signalement</h2><div style="width:20px;"></div></div>
+      <div class="content">
+        <div class="steps"><div class="done"></div><div class="active"></div><div></div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">ÉTAPE 2 SUR 3</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px;">Confirmez la position</div>
+        <div style="font-size:13px;color:var(--grey);margin-bottom:16px;line-height:1.5;">Nous avons détecté votre position. Ajustez le repère si besoin.</div>
+        <div class="map-mock" style="height:200px;">
+          <div class="pin pin-almost" style="top:42%;left:46%;"><span>♻️</span></div>
+        </div>
+        <div class="field" style="margin-top:16px;"><label>Adresse / quartier</label><input value="Rue Joss, Akwa, Douala"></div>
+        <button class="btn btn-outline" style="height:40px;font-size:13px;">📍 Utiliser ma position actuelle</button>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid #EEE;">
+        <button class="btn btn-primary">Continuer</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 6c. NOUVEAU SIGNALEMENT — ETAPE 3 -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>06c</span>Signalement — Étape 3/3 : Description</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">←</div><h2 style="color:var(--ink);">Nouveau signalement</h2><div style="width:20px;"></div></div>
+      <div class="content">
+        <div class="steps"><div class="done"></div><div class="done"></div><div class="active"></div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">ÉTAPE 3 SUR 3</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px;">Décrivez le problème</div>
+
+        <div class="field"><label>Type de signalement</label></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          <span class="badge badge-full" style="padding:8px 14px;font-size:12px;">🗑️ Bac plein</span>
+          <span class="badge badge-offline" style="padding:8px 14px;font-size:12px;">🚧 Dépôt sauvage</span>
+          <span class="badge badge-offline" style="padding:8px 14px;font-size:12px;">⚠️ Bac endommagé</span>
+          <span class="badge badge-offline" style="padding:8px 14px;font-size:12px;">🔥 Feu / fumée</span>
+        </div>
+
+        <div class="field">
+          <label>Description (optionnel)</label>
+          <textarea placeholder="Ex. Le bac débordait depuis 3 jours, des ordures sont au sol..."></textarea>
+        </div>
+
+        <div class="card" style="display:flex;gap:10px;align-items:center;">
+          <div style="width:48px;height:48px;border-radius:8px;background:#EFEFEF;display:flex;align-items:center;justify-content:center;">📷</div>
+          <div style="flex:1;font-size:13px;font-weight:700;">Photo ajoutée</div>
+          <div style="font-size:12px;color:var(--green);font-weight:700;">Voir</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid #EEE;">
+        <button class="btn btn-primary">Envoyer le signalement</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 7. MES SIGNALEMENTS -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>07</span>Mes signalements</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green"><h2>Mes signalements</h2><div class="icon-btn">⚙️</div></div>
+      <div class="content">
+        <div class="pill-tab">
+          <span class="active">Tous</span>
+          <span>En cours</span>
+          <span>Résolus</span>
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;">
+          <div class="photo-placeholder" style="width:56px;height:56px;font-size:18px;flex-shrink:0;">🗑️</div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;">
+              <div style="font-weight:700;font-size:14px;">Bac plein — Rue Joss</div>
+              <span class="badge badge-almost">En cours</span>
+            </div>
+            <div style="font-size:12px;color:var(--grey);margin-top:4px;">Akwa · Il y a 2 heures</div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;">
+          <div class="photo-placeholder" style="width:56px;height:56px;font-size:18px;flex-shrink:0;">🚧</div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;">
+              <div style="font-weight:700;font-size:14px;">Dépôt sauvage</div>
+              <span class="badge badge-normal">Résolu</span>
+            </div>
+            <div style="font-size:12px;color:var(--grey);margin-top:4px;">Bonapriso · Hier</div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;">
+          <div class="photo-placeholder" style="width:56px;height:56px;font-size:18px;flex-shrink:0;">🔥</div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;">
+              <div style="font-weight:700;font-size:14px;">Feu sur bac #088</div>
+              <span class="badge badge-fire">Urgent</span>
+            </div>
+            <div style="font-size:12px;color:var(--grey);margin-top:4px;">Bonanjo · Il y a 3 jours</div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;">
+          <div class="photo-placeholder" style="width:56px;height:56px;font-size:18px;flex-shrink:0;">🗑️</div>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;">
+              <div style="font-weight:700;font-size:14px;">Bac plein — Marché Mboppi</div>
+              <span class="badge badge-normal">Résolu</span>
+            </div>
+            <div style="font-size:12px;color:var(--grey);margin-top:4px;">Mboppi · Il y a 5 jours</div>
+          </div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem active"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 8. DETAIL SIGNALEMENT -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>08</span>Détail signalement</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">←</div><h2 style="color:var(--ink);">Détail</h2><div class="icon-btn" style="background:#F3F3F3;color:var(--ink);">⋮</div></div>
+      <div class="content">
+        <div class="photo-placeholder" style="height:160px;font-size:36px;">🗑️</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:14px;">
+          <div>
+            <div style="font-weight:800;font-size:17px;">Bac plein — Rue Joss</div>
+            <div style="font-size:12px;color:var(--grey);margin-top:2px;">Akwa, Douala · Signalé le 10 juin</div>
+          </div>
+          <span class="badge badge-almost">En cours</span>
+        </div>
+
+        <div style="font-size:13px;color:var(--ink);line-height:1.5;margin:14px 0;">
+          Le bac débordait depuis 3 jours, des ordures sont tombées au sol près de l'arrêt de bus.
+        </div>
+
+        <div class="section-title">Suivi du signalement</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div style="font-weight:700;font-size:13px;">Signalement envoyé</div>
+            <div style="font-size:12px;color:var(--grey);">10 juin, 08:42</div>
+          </div>
+          <div class="timeline-item">
+            <div style="font-weight:700;font-size:13px;">Pris en charge par Hysacam</div>
+            <div style="font-size:12px;color:var(--grey);">10 juin, 10:15</div>
+          </div>
+          <div class="timeline-item pending">
+            <div style="font-weight:700;font-size:13px;color:var(--grey);">Collecte planifiée</div>
+            <div style="font-size:12px;color:var(--grey);">En attente</div>
+          </div>
+          <div class="timeline-item pending">
+            <div style="font-weight:700;font-size:13px;color:var(--grey);">Résolu</div>
+            <div style="font-size:12px;color:var(--grey);">—</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px;border-top:1px solid #EEE;">
+        <button class="btn btn-outline">Annuler le signalement</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 9. MON PROFIL -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>09</span>Mon profil</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green"><h2>Mon profil</h2><div class="icon-btn">⚙️</div></div>
+      <div class="content">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:16px 0 24px;">
+          <div class="avatar" style="width:72px;height:72px;font-size:24px;">MN</div>
+          <div style="font-weight:800;font-size:18px;margin-top:10px;">Maeva Nguemo</div>
+          <div style="font-size:12px;color:var(--grey);">Akwa, Douala · membre depuis mai 2026</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--green);">7</div>
+            <div style="font-size:11px;color:var(--grey);">Signalements</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--green);">5</div>
+            <div style="font-size:11px;color:var(--grey);">Résolus</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--green);">🌱 32</div>
+            <div style="font-size:11px;color:var(--grey);">Points impact</div>
+          </div>
+        </div>
+
+        <div class="section-title">Compte</div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">✏️ Modifier mon profil<span style="color:var(--grey);">›</span></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">🔔 Notifications<span style="color:var(--grey);">›</span></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">🔒 Confidentialité<span style="color:var(--grey);">›</span></div>
+
+        <div class="section-title">Aide</div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">❓ FAQ<span style="color:var(--grey);">›</span></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">📩 Contacter le support<span style="color:var(--grey);">›</span></div>
+
+        <button class="btn btn-ghost" style="margin-top:6px;color:var(--red);">Se déconnecter</button>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem active"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 10. MODIFIER PROFIL -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>10</span>Modifier profil</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar"><div style="font-size:20px;">←</div><h2 style="color:var(--ink);">Modifier profil</h2><div style="color:var(--green);font-weight:800;font-size:14px;">Enregistrer</div></div>
+      <div class="content">
+        <div style="display:flex;flex-direction:column;align-items:center;padding:10px 0 24px;">
+          <div class="avatar" style="width:80px;height:80px;font-size:26px;position:relative;">
+            MN
+            <div style="position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid white;">📷</div>
+          </div>
+          <div style="font-size:12px;color:var(--green);font-weight:700;margin-top:10px;">Changer la photo</div>
+        </div>
+
+        <div class="field"><label>Nom complet</label><input value="Maeva Nguemo"></div>
+        <div class="field"><label>Numéro de téléphone</label><input value="+237 6 99 12 34 56"></div>
+        <div class="field"><label>Quartier</label><input value="Akwa, Douala"></div>
+        <div class="field"><label>Email (optionnel)</label><input placeholder="vous@email.com"></div>
+
+        <div class="section-title">Sécurité</div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">🔑 Changer le mot de passe<span style="color:var(--grey);">›</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 11. NOTIFICATIONS -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>11</span>Notifications</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green"><h2>Notifications</h2><div style="font-size:12px;font-weight:700;">Tout marquer lu</div></div>
+      <div class="content">
+        <div class="section-title">Aujourd'hui</div>
+        <div class="card" style="display:flex;gap:12px;border-left:3px solid var(--green-light);">
+          <div style="font-size:20px;">✅</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13px;">Votre signalement a été résolu</div>
+            <div style="font-size:12px;color:var(--grey);margin-top:2px;">Bac plein — Marché Mboppi · il y a 1h</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;gap:12px;border-left:3px solid var(--orange);">
+          <div style="font-size:20px;">🚛</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13px;">Collecte prévue dans votre quartier</div>
+            <div style="font-size:12px;color:var(--grey);margin-top:2px;">Akwa · aujourd'hui entre 14h et 17h</div>
+          </div>
+        </div>
+
+        <div class="section-title">Cette semaine</div>
+        <div class="card" style="display:flex;gap:12px;opacity:0.7;">
+          <div style="font-size:20px;">📍</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13px;">Signalement pris en charge</div>
+            <div style="font-size:12px;color:var(--grey);margin-top:2px;">Bac plein — Rue Joss · lundi</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;gap:12px;opacity:0.7;">
+          <div style="font-size:20px;">🌱</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13px;">+5 points d'impact gagnés</div>
+            <div style="font-size:12px;color:var(--grey);margin-top:2px;">Merci pour votre contribution · lundi</div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <div>
+            <div style="font-weight:700;font-size:13px;">Notifications push</div>
+            <div style="font-size:11px;color:var(--grey);">Recevoir des alertes en temps réel</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 12. EMPTY STATES -->
+  <div class="screen-wrap">
+    <div class="screen-label"><span>12</span>États vides — Empty states</div>
+    <div class="frame"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="topbar green"><h2>Mes signalements</h2><div class="icon-btn">⚙️</div></div>
+      <div class="content" style="display:flex;flex-direction:column;justify-content:center;height:100%;">
+        <div class="empty-state">
+          <div class="empty-illustration">🌿</div>
+          <h3>Aucun signalement pour le moment</h3>
+          <p>Vous n'avez encore rien signalé. Si vous voyez un bac plein ou un dépôt sauvage, signalez-le en quelques secondes.</p>
+          <button class="btn btn-primary" style="padding:0 28px;width:auto;">📍 Faire un signalement</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="navitem"><div class="navicon">🏠</div>Accueil</div>
+        <div class="navitem"><div class="navicon">🗺️</div>Carte</div>
+        <div class="navitem"><div class="navicon">➕</div>Signaler</div>
+        <div class="navitem active"><div class="navicon">📋</div>Mes signal.</div>
+        <div class="navitem"><div class="navicon">👤</div>Profil</div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+﻿
+> app-populations@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+npm : uncaughtException [Error: EPERM: operation not permitted, open 
+'C:\Users\USER\Documents\dev\Smart-Collect\app-populations\.next\trace'] {
+Au caractère Ligne:1 : 66
++ ... ments\dev\Smart-Collect\app-populations" ; npm run build 2>&1 | Out-F ...
++                                                ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (uncaughtExcepti....next\trace'] { 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'open',
+  path: 
+'C:\\Users\\USER\\Documents\\dev\\Smart-Collect\\app-populations\\.next\\trace'
+}
