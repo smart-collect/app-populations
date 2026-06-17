@@ -10,17 +10,21 @@ import {
 export function useNotifications() {
   const queryClient = useQueryClient();
 
-  const notificationsQuery = useQuery(["notifications"], () => getNotifications(), {
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications(),
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
 
-  const markAsReadMutation = useMutation((id: string) => markAsRead(id), {
-    onSuccess: () => queryClient.invalidateQueries(["notifications"]),
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => markAsRead(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
-  const markAllAsReadMutation = useMutation(() => markAllAsRead(), {
-    onSuccess: () => queryClient.invalidateQueries(["notifications"]),
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => markAllAsRead(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   return {

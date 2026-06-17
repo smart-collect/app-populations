@@ -6,18 +6,23 @@ import { getProfile, getStats, updateProfile } from "@/lib/api/users";
 export function useProfile() {
   const queryClient = useQueryClient();
 
-  const profileQuery = useQuery(["profile"], getProfile, {
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
     staleTime: 30_000,
   });
 
-  const statsQuery = useQuery(["profile-stats"], getStats, {
+  const statsQuery = useQuery({
+    queryKey: ["profile-stats"],
+    queryFn: getStats,
     staleTime: 30_000,
   });
 
-  const updateProfileMutation = useMutation(updateProfile, {
+  const updateProfileMutation = useMutation({
+    mutationFn: updateProfile,
     onSuccess: (data) => {
       queryClient.setQueryData(["profile"], data);
-      queryClient.invalidateQueries(["profile-stats"]);
+      queryClient.invalidateQueries({ queryKey: ["profile-stats"] });
     },
   });
 
