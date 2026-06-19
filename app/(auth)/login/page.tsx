@@ -11,6 +11,7 @@ import { PasswordInput } from "@/components/forms/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BinoMascot } from "@/components/BinoMascot";
 import { ApiClientError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
@@ -66,19 +67,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-bold">Bon retour</h1>
-        <p className="text-sm text-muted-foreground">
-          Connecte-toi pour accéder à ton espace citoyen.
-        </p>
+    <div className="flex flex-col justify-center min-h-screen px-5 py-8 bg-slate-50/50">
+      <div className="flex flex-col items-center space-y-3 mb-6">
+        <BinoMascot pose="waving" size={100} className="drop-shadow-md" />
+        <div className="space-y-1 text-center">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Bon retour !</h1>
+          <p className="text-sm text-muted-foreground">
+            Connectez-vous pour continuer
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormError message={globalError} />
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-xs font-semibold text-text-secondary">Email</Label>
           <Input
             id="email"
             type="email"
@@ -93,7 +97,7 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password" className="text-xs font-semibold text-text-secondary">Mot de passe</Label>
           <PasswordInput
             id="password"
             autoComplete="current-password"
@@ -107,18 +111,24 @@ export default function LoginPage() {
           )}
         </div>
 
-        <Button type="submit" className="h-12 w-full" disabled={isLoading}>
+        <div className="text-right">
+          <Link href="/forgot-password" className="text-xs font-bold text-primary">
+            Mot de passe oublié ?
+          </Link>
+        </div>
+
+        <Button type="submit" className="h-12 w-full font-bold" disabled={isLoading}>
           {isLoading ? "Connexion..." : "Se connecter"}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Pas de compte ?{" "}
+      <p className="text-center text-sm text-text-secondary mt-4">
+        Pas encore de compte ?{" "}
         <Link
           href="/register"
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-bold text-primary"
         >
-          Créer un compte
+          S'inscrire
         </Link>
       </p>
     </div>

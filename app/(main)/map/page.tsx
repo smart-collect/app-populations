@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BinCard } from "@/components/BinCard";
-import { MapControls } from "@/components/Map/MapControls";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useNearbyBins } from "@/hooks/useNearbyBins";
 import { type Bin } from "@/lib/api/bins";
+import { BinoMascot } from "@/components/BinoMascot";
 
 const MapView = dynamic(() => import("@/components/Map/MapView"), {
   ssr: false,
@@ -80,64 +80,168 @@ export default function MapPage() {
     );
   }
 
+  // Get status color representation
+  const getStatusColorClass = (status: Bin["status"]) => {
+    switch (status) {
+      case "NORMAL":
+        return "bg-primary-light";
+      case "ALMOST_FULL":
+        return "bg-amber-500";
+      case "FULL":
+        return "bg-danger";
+      case "FIRE":
+        return "bg-red-950";
+      default:
+        return "bg-slate-400";
+    }
+  };
+
+  const getStatusText = (bin: Bin) => {
+    switch (bin.status) {
+      case "NORMAL":
+        return `Normal (${bin.fill_level}%)`;
+      case "ALMOST_FULL":
+        return `Presque plein (${bin.fill_level}%)`;
+      case "FULL":
+        return `Plein (${bin.fill_level}%)`;
+      case "FIRE":
+        return `Feu actif !`;
+      default:
+        return `Hors ligne`;
+    }
+  };
+
   return (
-    <div className="relative h-[calc(100vh-116px)] w-full overflow-hidden">
-      <div className="absolute inset-0">
-        <MapView
-          centerLat={mapCenter.lat}
-          centerLng={mapCenter.lng}
-          bins={filteredBins}
-          userLocation={lat && lng ? { lat, lng } : undefined}
-          onBinClick={(bin) => setActiveBin(bin)}
-        />
+    <div className="flex flex-col h-full bg-slate-50/50">
+      {/* Green Topbar */}
+      <div className="bg-primary px-5 pt-5 pb-4 flex items-center justify-between flex-shrink-0 shadow-md text-white">
+        <h2 className="text-lg font-bold tracking-wide">Carte des bacs</h2>
+        <button
+          onClick={() => setMapCenter(lat && lng ? { lat, lng } : DEFAULT_CENTER)}
+          className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center text-white transition-all"
+          title="Ma position"
+        >
+          🎯
+        </button>
       </div>
 
-      <MapControls
-        activeFilters={selectedFilters}
-        onRecenter={() => {
-          setMapCenter(lat && lng ? { lat, lng } : DEFAULT_CENTER);
-        }}
-        onFilterChange={setSelectedFilters}
-      />
-
-      <div className="pointer-events-none absolute left-0 top-14 z-40 flex w-full justify-center px-4">
-        <div className="pointer-events-auto rounded-3xl bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-lg ring-1 ring-slate-200">
-          {loading && "Recherche de votre position..."}
-          {!loading && error && (
-            <div className="space-y-2">
-              <p>{error}</p>
-              <Button onClick={handleActivateLocation} size="sm">
-                Activer la localisation
-              </Button>
-            </div>
-          )}
-          {!loading && !error && "Bacs publics autour de vous"}
-        </div>
-      </div>
-
-      {(isLoading || loading) && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-900/10">
-          <div className="rounded-3xl bg-white/95 px-6 py-4 text-center text-slate-800 shadow-lg ring-1 ring-slate-200">
-            Chargement de la carte et des bacs...
-          </div>
-        </div>
-      )}
-
-      {isError && (
-        <div className="pointer-events-none absolute inset-x-4 bottom-24 z-40 rounded-3xl bg-red-50 px-4 py-3 text-sm text-red-700 shadow-lg ring-1 ring-red-200">
-          Impossible de charger les bacs pour le moment.
-        </div>
-      )}
-
-      {activeBin ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
-          <BinCard
-            bin={activeBin}
-            distanceMeters={distanceMeters}
-            onViewDetails={() => window.alert("Voir détails du bac : " + activeBin.name)}
+      {/* Map Content */}
+      <div className="relative flex-1 w-full overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <MapView
+            centerLat={mapCenter.lat}
+            centerLng={mapCenter.lng}
+            bins={filteredBins}
+            userLocation={lat && lng ? { lat, lng } : undefined}
+            onBinClick={(bin) => setActiveBin(bin)}
           />
         </div>
-      ) : null}
+
+        {/* Floating search status info */}
+        <div className="absolute left-0 top-4 z-10 flex w-full justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto rounded-full bg-white/95 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-md ring-1 ring-slate-100 flex items-center gap-2">
+            {loading && (
+              <>
+                <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                <span>Recherche de votre position...</span>
+              </>
+            )}
+            {!loading && error && (
+              <div className="flex items-center gap-2 pointer-events-auto">
+                <span className="text-danger">⚠️ {error}</span>
+                <button
+                  onClick={handleActivateLocation}
+                  className="underline text-primary font-bold ml-1 active:opacity-70"
+                >
+                  Activer
+                </button>
+              </div>
+            )}
+            {!loading && !error && (
+              <>
+                <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+                <span>Bacs à proximité ({filteredBins.length} trouvés)</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Loading overlay */}
+        {(isLoading || loading) && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/10 backdrop-blur-[1px] pointer-events-none">
+            <div className="rounded-2xl bg-white/90 px-5 py-3 text-center text-xs font-bold text-slate-800 shadow-md ring-1 ring-slate-100">
+              Chargement des bacs...
+            </div>
+          </div>
+        )}
+
+        {/* Legend / bottom card - based on mockup 5 */}
+        <div className="absolute bottom-4 left-4 right-4 z-10 bg-white/95 backdrop-blur-md border border-slate-100/80 shadow-xl rounded-2xl p-4 flex flex-col gap-3 pointer-events-auto">
+          {/* Colors Legend */}
+          <div className="flex gap-3 text-[10px] font-bold text-slate-500 flex-wrap border-b border-slate-100 pb-2.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span>Normal</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span>Presque plein</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-danger" />
+              <span>Plein</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-950" />
+              <span>Feu 🔥</span>
+            </div>
+          </div>
+
+          {/* Active bin details or empty state */}
+          {activeBin ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-extrabold text-slate-800 text-sm">{activeBin.name}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-semibold">
+                    <span className={`w-2 h-2 rounded-full ${getStatusColorClass(activeBin.status)}`} />
+                    <span>Statut : {getStatusText(activeBin)}</span>
+                    {distanceMeters > 0 && <span>· {distanceMeters.toFixed(0)} m</span>}
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg flex-shrink-0">
+                  🗑️
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button asChild size="sm" className="flex-1 h-9 font-bold text-xs rounded-lg shadow-sm">
+                  <Link href={`/reports/new?bin=${activeBin.id}&desc=${encodeURIComponent("Bac plein : " + activeBin.name)}`}>
+                    📍 Signaler ce bac
+                  </Link>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setActiveBin(null);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="h-9 font-bold text-xs rounded-lg border-slate-200 text-slate-500 hover:bg-slate-50 bg-white"
+                >
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3.5 py-1">
+              <BinoMascot pose="standing" size={44} className="flex-shrink-0 drop-shadow-sm" />
+              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                Sélectionnez un bac sur la carte pour voir son niveau de remplissage et le signaler en cas de besoin.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

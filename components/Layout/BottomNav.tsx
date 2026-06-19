@@ -6,10 +6,10 @@ import { ClipboardList, Home, Map, Plus, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/home", label: "Home", icon: Home },
+  { href: "/home", label: "Accueil", icon: Home },
   { href: "/map", label: "Carte", icon: Map },
   { href: "/reports/new", label: "Signaler", icon: Plus, center: true },
-  { href: "/reports", label: "Signalements", icon: ClipboardList },
+  { href: "/reports", label: "Mes signal.", icon: ClipboardList },
   { href: "/profile", label: "Profil", icon: User },
 ];
 
